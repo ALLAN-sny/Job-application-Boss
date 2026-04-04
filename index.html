@@ -2,71 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bionex Admin | Management</title>
+    <title>Bionex Admin | Boss Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
     <style>
         :root { --primary: #1a237e; --secondary: #303f9f; --success: #2e7d32; --danger: #d32f2f; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; display: flex; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; display: flex; }
         
-        /* Sidebar Styles */
-        .sidebar { width: 320px; background: var(--primary); color: white; padding: 25px; height: 100vh; position: fixed; box-sizing: border-box; box-shadow: 4px 0 10px rgba(0,0,0,0.2); }
-        .sidebar h2 { font-size: 1.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
+        /* Sidebar */
+        .sidebar { width: 320px; background: var(--primary); color: white; padding: 25px; height: 100vh; position: fixed; box-sizing: border-box; overflow-y: auto; }
+        .sidebar h2 { border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         
-        /* Main Content Styles */
-        .main { margin-left: 320px; padding: 40px; width: 100%; box-sizing: border-box; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        /* Main Content */
+        .main { margin-left: 320px; padding: 30px; width: 100%; box-sizing: border-box; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
         
-        /* Form Elements */
-        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.9rem; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-post { background: #ffca28; color: #1a237e; width: 100%; margin-top: 20px; }
-        .btn-post:hover { background: #ffd54f; }
+        /* Buttons & Inputs */
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-post { background: #ffca28; color: #1a237e; width: 100%; margin-top: 10px; }
+        .btn-clear { background: #f44336; color: white; margin-top: 5px; font-size: 0.8rem; }
+        .btn-view { background: #0288d1; color: white; font-size: 0.8rem; }
         
-        /* Table Styles */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; background: #f8f9fa; padding: 15px; color: #555; border-bottom: 2px solid #eee; }
-        td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: top; }
-        
-        .ans-preview { font-size: 0.85rem; color: #444; background: #f9f9f9; padding: 10px; border-radius: 6px; border-left: 4px solid var(--secondary); line-height: 1.4; }
-        .btn-acc { background: var(--success); color: white; margin-right: 5px; font-size: 0.8rem; }
-        .btn-rej { background: var(--danger); color: white; font-size: 0.8rem; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f8f9fa; font-size: 0.9rem; }
+        .ans-preview { font-size: 0.85rem; background: #f9f9f9; padding: 8px; border-radius: 5px; border-left: 3px solid var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Post Job Vacancy</h2>
-    
-    <label>Job Designation</label>
+    <h2>Broadcast Job</h2>
+    <label>Job Title</label>
     <input type="text" id="jobTitle" placeholder="e.g. Biomedical Engineer">
     
-    <label>Interview Questions</label>
-    <textarea id="jobQuestions" rows="5" placeholder="Q1, Q2, Q3... (comma separated)"></textarea>
+    <label>Interview Questions (comma separated)</label>
+    <textarea id="jobQuestions" rows="4" placeholder="Experience?, Salary expectation?, etc."></textarea>
     
-    <label style="cursor:pointer; display: flex; align-items: center; gap: 10px;">
-        <input type="checkbox" id="requireCV" style="width:auto;"> CV Attachment Required?
-    </label>
+    <label><input type="checkbox" id="requireCV"> Require Attachment</label>
+    <button class="btn btn-post" onclick="postJob()">BROADCAST NOW</button>
+
+    <hr style="margin: 30px 0; border: 0.5px solid rgba(255,255,255,0.1);">
     
-    <button class="btn btn-post" onclick="postJob()">Broadcast Job</button>
+    <h3>Manage Active Jobs</h3>
+    <div id="activeJobsList"></div>
+    <button class="btn btn-clear" style="width:100%;" onclick="clearAllJobs()">CLEAR ALL JOBS</button>
 </div>
 
 <div class="main">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-        <h1 style="margin:0; color:var(--primary);">Applicant Review Board</h1>
-        <button class="btn" style="background:#eee;" onclick="location.href='index.html'">View Portal</button>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1 style="color:var(--primary);">Bionex Applicant Review Board</h1>
+        <button class="btn" onclick="location.href='index.html'">View Portal</button>
     </div>
-    
+
     <div class="card">
-        <h3 id="countLabel">Loading applications...</h3>
+        <h3 id="appCount">Active Applications (0)</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Applicant Info</th>
+                    <th>Applicant Details</th>
                     <th>Job Title</th>
-                    <th>Interview Response</th>
-                    <th>Action</th>
+                    <th>Interview & Uploads</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="appTable"></tbody>
@@ -75,88 +73,110 @@
 </div>
 
 <script>
-    // Initialize EmailJS with your Public Key
     emailjs.init("gCwHsyNsD024VEWx7");
 
+    // --- JOB MANAGEMENT ---
     function postJob() {
         const title = document.getElementById("jobTitle").value.trim();
         const questions = document.getElementById("jobQuestions").value.trim();
         const cv = document.getElementById("requireCV").checked;
 
-        if(!title) return alert("Please specify the Job Title.");
+        if(!title) return alert("Please enter job title");
 
-        const jobObj = { title, questions, attachmentRequired: cv };
-        let jobsList = JSON.parse(localStorage.getItem("bionex_posted_jobs")) || [];
-        jobsList.push(jobObj);
-        localStorage.setItem("bionex_posted_jobs", JSON.stringify(jobsList));
-        
-        alert("Success! The job is now live.");
+        const job = { id: Date.now(), title, questions, attachmentRequired: cv };
+        let jobs = JSON.parse(localStorage.getItem("bionex_posted_jobs")) || [];
+        jobs.push(job);
+        localStorage.setItem("bionex_posted_jobs", JSON.stringify(jobs));
         location.reload();
     }
 
+    function renderActiveJobs() {
+        const jobs = JSON.parse(localStorage.getItem("bionex_posted_jobs")) || [];
+        const div = document.getElementById("activeJobsList");
+        div.innerHTML = "";
+        jobs.forEach((job, index) => {
+            div.innerHTML += `
+                <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:5px; margin-bottom:5px; font-size:0.85rem;">
+                    ${job.title} 
+                    <button onclick="deleteJob(${index})" style="float:right; background:none; border:none; color:#ff8a80; cursor:pointer;">✖</button>
+                </div>`;
+        });
+    }
+
+    function deleteJob(index) {
+        let jobs = JSON.parse(localStorage.getItem("bionex_posted_jobs"));
+        jobs.splice(index, 1);
+        localStorage.setItem("bionex_posted_jobs", JSON.stringify(jobs));
+        location.reload();
+    }
+
+    function clearAllJobs() {
+        if(confirm("Clear all active job broadcasts?")) {
+            localStorage.removeItem("bionex_posted_jobs");
+            location.reload();
+        }
+    }
+
+    // --- APPLICANT MANAGEMENT ---
     function renderApps() {
         const apps = JSON.parse(localStorage.getItem("bionex_submissions")) || [];
-        const tableBody = document.getElementById("appTable");
-        document.getElementById("countLabel").innerText = `Active Applications (${apps.length})`;
-        
-        tableBody.innerHTML = apps.length === 0 
-            ? `<tr><td colspan="4" style="text-align:center; padding:40px; color:#999;">No applicants yet.</td></tr>` 
-            : "";
+        const tbody = document.getElementById("appTable");
+        document.getElementById("appCount").innerText = `Active Applications (${apps.length})`;
+        tbody.innerHTML = "";
 
         apps.forEach((app, idx) => {
-            let responses = app.answers.map(a => `• <b>${a.question}</b>: ${a.answer}`).join('<br>');
+            let responses = app.answers.map(a => `<b>Q:</b> ${a.question}<br><b>A:</b> ${a.answer}`).join('<br><hr>');
             
-            tableBody.innerHTML += `
+            tbody.innerHTML += `
                 <tr>
                     <td>
-                        <b>${app.name}</b><br>
-                        <small>Age: ${app.age} | ${app.phone}</small><br>
-                        <i style="font-size:0.8rem; color:#666;">${app.email}</i>
+                        <strong>${app.name}</strong><br>
+                        <small>${app.email}</small><br>
+                        <small>${app.phone} (Age: ${app.age})</small>
                     </td>
-                    <td><span style="color:var(--primary); font-weight:600;">${app.jobTitle}</span></td>
-                    <td><div class="ans-preview">${responses || "No specific questions answered."}</div></td>
-                    <td style="white-space:nowrap;">
-                        <button class="btn btn-acc" onclick="processDecision(${idx}, 'Accepted')">Accept</button>
-                        <button class="btn btn-rej" onclick="processDecision(${idx}, 'Rejected')">Reject</button>
+                    <td><span style="font-weight:bold; color:var(--primary);">${app.jobTitle}</span></td>
+                    <td>
+                        <div class="ans-preview">${responses || "No interview answers."}</div>
+                        ${app.attachment ? `<br><button class="btn btn-view" onclick="viewFile('${app.attachment}')">📄 View Attachment</button>` : ""}
+                    </td>
+                    <td>
+                        <button class="btn" style="background:var(--success); color:white;" onclick="process(${idx}, 'Accepted')">Accept</button>
+                        <button class="btn" style="background:var(--danger); color:white;" onclick="process(${idx}, 'Rejected')">Reject</button>
                     </td>
                 </tr>`;
         });
     }
 
-    async function processDecision(index, decision) {
+    function viewFile(base64Data) {
+        const win = window.open();
+        win.document.write(`<iframe src="${base64Data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+    }
+
+    async function process(index, decision) {
         let apps = JSON.parse(localStorage.getItem("bionex_submissions"));
         const target = apps[index];
-        const btnClicked = event.target;
         
-        btnClicked.innerText = "Processing...";
-        btnClicked.disabled = true;
-
-        // Custom English Message for the Applicant
-        const customMessage = decision === "Accepted" 
-            ? `We are pleased to inform you that your application for the ${target.jobTitle} position has been accepted. Our team will reach out to you shortly for the next steps in the recruitment process.`
-            : `Thank you for your interest in the ${target.jobTitle} position. After careful review, we regret to inform you that we will not be moving forward with your application at this time. We wish you the best in your future endeavors.`;
+        const msg = decision === "Accepted" 
+            ? `Congratulations ${target.name}! Your application for ${target.jobTitle} at Bionex Company Ltd was successful. We will contact you shortly.`
+            : `Dear ${target.name}, we regret to inform you that your application for ${target.jobTitle} was not successful at this time.`;
 
         try {
             await emailjs.send("service_b11zlym", "template_j9v1gyq", {
                 to_name: target.name,
                 to_email: target.email,
-                message: customMessage,
+                message: msg,
                 job_title: target.jobTitle,
                 status: decision
             });
+            alert("Notification sent to applicant!");
+        } catch (e) { alert("Email failed, but applicant cleared from list."); }
 
-            alert(`Notification sent! Applicant has been ${decision}.`);
-        } catch (err) {
-            console.error("EmailJS Error:", err);
-            alert("Application processed, but email notification failed. Please check your EmailJS quotas.");
-        } finally {
-            // Remove applicant from dashboard
-            apps.splice(index, 1);
-            localStorage.setItem("bionex_submissions", JSON.stringify(apps));
-            renderApps();
-        }
+        apps.splice(index, 1);
+        localStorage.setItem("bionex_submissions", JSON.stringify(apps));
+        renderApps();
     }
 
+    renderActiveJobs();
     renderApps();
 </script>
 </body>
