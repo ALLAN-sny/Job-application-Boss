@@ -2,11 +2,19 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f0f4f8; color:#333; text-align:center; }
+    h2,h3 { color:#2a2a72; }
+    input, textarea, button { padding:10px; margin:5px 0; width:90%; max-width:400px; border-radius:6px; border:1px solid #ccc; }
+    button { background:#2a2a72; color:#fff; font-weight:bold; cursor:pointer; transition:.3s; border:none; }
+    button:hover { background:#4747c0; }
+    .job-card, .applicant-card { background:#fff; border-radius:12px; padding:15px; margin:15px auto; width:90%; max-width:500px; text-align:left; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+    a { color:#2a2a72; font-weight:bold; text-decoration:none; }
+  </style>
 </head>
-<body style="font-family: Arial; text-align:center;">
+<body>
 
-<h2>🔐 Admin Dashboard</h2>
-
+<h2>Admin Dashboard</h2>
 <div id="loginBox">
   <input type="password" id="pass" placeholder="Enter Password">
   <button onclick="login()">Login</button>
@@ -14,8 +22,9 @@
 
 <div id="dashboardContent" style="display:none;">
   <h3>Jobs Management</h3>
-  <input id="jobTitle" placeholder="Job Title"><br><br>
-  <textarea id="jobCriteria" placeholder="Job Criteria"></textarea><br><br>
+  <input id="jobTitle" placeholder="Job Title"><br>
+  <textarea id="jobCriteria" placeholder="Job Criteria"></textarea><br>
+  <label><input type="checkbox" id="cvRequired"> CV Required?</label><br>
   <button onclick="addJob()">Add Job</button>
 
   <h3>Applicants List</h3>
@@ -26,14 +35,11 @@
 <script>
 (function(){ emailjs.init("gCwHsyNsD024VEWx7"); })();
 const ADMIN_PASSWORD = "admin123";
-
-if(localStorage.getItem("isAdmin") === "true"){ showDashboard(); }
+if(localStorage.getItem("isAdmin")==="true") showDashboard();
 
 function login(){
-  let password = document.getElementById("pass").value;
-  if(password===ADMIN_PASSWORD){
-    localStorage.setItem("isAdmin","true");
-    showDashboard();
+  if(document.getElementById("pass").value===ADMIN_PASSWORD){
+    localStorage.setItem("isAdmin","true"); showDashboard();
   } else { alert("❌ Wrong password"); }
 }
 
@@ -43,45 +49,40 @@ function showDashboard(){
   loadApplicants();
 }
 
-function loadApplicants(){
-  let applicants = JSON.parse(localStorage.getItem("apps")) || [];
-  let container = document.getElementById("data");
-  container.innerHTML = "";
-
-  if(applicants.length===0){ container.innerHTML="<p>❗ No applicants yet</p>"; return; }
-
-  applicants.forEach((a,index)=>{
-    container.innerHTML += `
-      <p>
-        <b>${a.name}</b> applied for <b>${a.job}</b><br>
-        ${a.email}<br>
-        ${a.phone}<br>
-        ${a.attachment ? `<a href="${a.attachment}" target="_blank">📎 View Attachment</a>` : 'No attachment'}
-      </p>
-      <button onclick="decide('${a.name}','${a.email}','accepted')">✅ Accept</button>
-      <button onclick="decide('${a.name}','${a.email}','rejected')">❌ Reject</button>
-      <hr>
-    `;
-  });
-}
-
 function addJob(){
   let title=document.getElementById("jobTitle").value;
   let criteria=document.getElementById("jobCriteria").value;
+  let cvRequired=document.getElementById("cvRequired").checked;
   if(!title || !criteria){ alert("❌ Enter title and criteria"); return; }
-
   let jobs=JSON.parse(localStorage.getItem("jobs"))||[];
-  jobs.push({title,criteria});
+  jobs.push({title,criteria,cvRequired});
   localStorage.setItem("jobs",JSON.stringify(jobs));
-  alert("✅ Job added!"); document.getElementById("jobTitle").value="";
-  document.getElementById("jobCriteria").value="";
+  alert("✅ Job added!"); document.getElementById("jobTitle").value=""; document.getElementById("jobCriteria").value=""; document.getElementById("cvRequired").checked=false;
+}
+
+function loadApplicants(){
+  let applicants=JSON.parse(localStorage.getItem("apps"))||[];
+  let container=document.getElementById("data");
+  container.innerHTML="";
+  if(applicants.length===0){ container.innerHTML="<p>No applicants yet</p>"; return; }
+  applicants.forEach(a=>{
+    container.innerHTML+=`
+      <div class="applicant-card">
+        <b>${a.name}</b> applied for <b>${a.jobTitle}</b><br>
+        ${a.email}<br>${a.phone}<br>
+        <small>CV Required: ${a.cvRequired ? "Yes" : "No"}</small><br>
+        ${a.attachment ? `<a href="${a.attachment}" target="_blank">📎 View Attachment</a>` : 'No attachment'}<br>
+        <button onclick="decide('${a.name}','${a.email}','accepted')">✅ Accept</button>
+        <button onclick="decide('${a.name}','${a.email}','rejected')">❌ Reject</button>
+      </div>
+    `;
+  });
 }
 
 function decide(name,email,status){
   let message=status==="accepted" ? "🎉 Congratulations! You have been selected." : "😔 Sorry, you were not selected.";
   emailjs.send("service_b11zlym","template_j9v1gyq",{name,message,to_email:email})
-  .then(()=>{alert("✅ Email sent");})
-  .catch(()=>{alert("❌ Failed");});
+  .then(()=>{alert("✅ Email sent");}).catch(()=>{alert("❌ Failed");});
 }
 </script>
 </body>
