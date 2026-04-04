@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+</head>
+<body style="font-family: Arial; text-align:center;">
+
+<h2>🔐 Admin Dashboard</h2>
+
+<div id="loginBox">
+  <input type="password" id="pass" placeholder="Enter Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="dashboardContent" style="display:none;">
+  <h3>Jobs Management</h3>
+  <input id="jobTitle" placeholder="Job Title"><br><br>
+  <textarea id="jobCriteria" placeholder="Job Criteria"></textarea><br><br>
+  <button onclick="addJob()">Add Job</button>
+
+  <h3>Applicants List</h3>
+  <div id="data"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+(function(){ emailjs.init("gCwHsyNsD024VEWx7"); })();
+const ADMIN_PASSWORD = "admin123";
+
+if(localStorage.getItem("isAdmin") === "true"){ showDashboard(); }
+
+function login(){
+  let password = document.getElementById("pass").value;
+  if(password===ADMIN_PASSWORD){
+    localStorage.setItem("isAdmin","true");
+    showDashboard();
+  } else { alert("❌ Wrong password"); }
+}
+
+function showDashboard(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("dashboardContent").style.display="block";
+  loadApplicants();
+}
+
+function loadApplicants(){
+  let applicants = JSON.parse(localStorage.getItem("apps")) || [];
+  let container = document.getElementById("data");
+  container.innerHTML = "";
+
+  if(applicants.length===0){ container.innerHTML="<p>❗ No applicants yet</p>"; return; }
+
+  applicants.forEach((a,index)=>{
+    container.innerHTML += `
+      <p>
+        <b>${a.name}</b> applied for <b>${a.job}</b><br>
+        ${a.email}<br>
+        ${a.phone}<br>
+        ${a.attachment ? `<a href="${a.attachment}" target="_blank">📎 View Attachment</a>` : 'No attachment'}
+      </p>
+      <button onclick="decide('${a.name}','${a.email}','accepted')">✅ Accept</button>
+      <button onclick="decide('${a.name}','${a.email}','rejected')">❌ Reject</button>
+      <hr>
+    `;
+  });
+}
+
+function addJob(){
+  let title=document.getElementById("jobTitle").value;
+  let criteria=document.getElementById("jobCriteria").value;
+  if(!title || !criteria){ alert("❌ Enter title and criteria"); return; }
+
+  let jobs=JSON.parse(localStorage.getItem("jobs"))||[];
+  jobs.push({title,criteria});
+  localStorage.setItem("jobs",JSON.stringify(jobs));
+  alert("✅ Job added!"); document.getElementById("jobTitle").value="";
+  document.getElementById("jobCriteria").value="";
+}
+
+function decide(name,email,status){
+  let message=status==="accepted" ? "🎉 Congratulations! You have been selected." : "😔 Sorry, you were not selected.";
+  emailjs.send("service_b11zlym","template_j9v1gyq",{name,message,to_email:email})
+  .then(()=>{alert("✅ Email sent");})
+  .catch(()=>{alert("❌ Failed");});
+}
+</script>
+</body>
+</html>
