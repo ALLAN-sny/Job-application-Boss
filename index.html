@@ -1,111 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="sw">
 <head>
-<title>Admin Dashboard</title>
-<style>
-body { font-family: Arial, sans-serif; background:#eef2f7; color:#222; text-align:center; }
-h2,h3 { color:#1a237e; font-size:2em; }
-input, textarea, button { padding:10px; margin:5px 0; width:90%; max-width:400px; border-radius:6px; border:1px solid #ccc; font-size:1.1em;}
-button { background:#1a237e; color:#fff; font-weight:bold; cursor:pointer; border:none; transition:.3s; }
-button:hover { background:#3949ab; }
-.job-card, .applicant-card { background:#fff; border-radius:12px; padding:15px; margin:15px auto; width:90%; max-width:500px; text-align:left; box-shadow:0 5px 12px rgba(0,0,0,0.15);}
-a { color:#1a237e; font-weight:bold; text-decoration:none;}
-</style>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | Bionex</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #1a237e; color: white; }
+        .delete-btn { background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+        .nav-btn { background: #333; color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; }
+    </style>
 </head>
 <body>
 
-<h2>Admin Dashboard</h2>
-<div id="loginBox">
-<input type="password" id="pass" placeholder="Enter Password">
-<button onclick="login()">Login</button>
+<div class="header">
+    <h2><i class="fas fa-users-cog"></i> Admin Dashboard - Maombi ya Kazi</h2>
+    <a href="index.html" class="nav-btn">Rudi Nyumbani</a>
 </div>
 
-<div id="dashboardContent" style="display:none;">
-<h3>Jobs Management</h3>
-<input id="jobTitle" placeholder="Job Title"><br>
-<textarea id="jobCriteria" placeholder="Job Criteria"></textarea><br>
-<label><input type="checkbox" id="cvRequired"> CV Required?</label><br>
-<button onclick="addJob()">Add Job</button>
-
-<h3>Current Jobs</h3>
-<div id="jobsData"></div>
-
-<h3>Applicants List</h3>
-<div id="data"></div>
+<div class="card">
+    <h3 id="statCount">Jumla ya Maombi: 0</h3>
+    <table id="appsTable">
+        <thead>
+            <tr>
+                <th>Tarehe</th>
+                <th>Jina</th>
+                <th>Kazi Aliyoomba</th>
+                <th>Mawasiliano</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
-emailjs.init("gCwHsyNsD024VEWx7");
-const ADMIN_PASSWORD="admin123";
-if(localStorage.getItem("isAdmin")==="true") showDashboard();
+    function loadData() {
+        const apps = JSON.parse(localStorage.getItem("bionex_apps")) || [];
+        const tbody = document.getElementById("tableBody");
+        document.getElementById("statCount").innerText = "Jumla ya Maombi: " + apps.length;
+        
+        tbody.innerHTML = "";
+        apps.sort((a,b) => b.id - a.id).forEach((app, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${app.date}</td>
+                    <td><strong>${app.name}</strong></td>
+                    <td>${app.job}</td>
+                    <td>${app.phone}<br><small>${app.email}</small></td>
+                    <td><button class="delete-btn" onclick="deleteApp(${index})">Futa</button></td>
+                </tr>
+            `;
+        });
+    }
 
-function login(){ if(document.getElementById("pass").value===ADMIN_PASSWORD){ localStorage.setItem("isAdmin","true"); showDashboard(); }else alert("❌ Wrong password"); }
+    function deleteApp(index) {
+        if(confirm("Je, una uhakika unataka kufuta ombi hili?")) {
+            let apps = JSON.parse(localStorage.getItem("bionex_apps")) || [];
+            apps.splice(index, 1);
+            localStorage.setItem("bionex_apps", JSON.stringify(apps));
+            loadData();
+        }
+    }
 
-function showDashboard(){ document.getElementById("loginBox").style.display="none"; document.getElementById("dashboardContent").style.display="block"; loadJobs(); loadApplicants(); }
-
-function addJob(){
-  let title=document.getElementById("jobTitle").value;
-  let criteria=document.getElementById("jobCriteria").value;
-  let cvRequired=document.getElementById("cvRequired").checked;
-  if(!title || !criteria){ alert("Enter title and criteria"); return;}
-  let jobs=JSON.parse(localStorage.getItem("jobs"))||[];
-  jobs.push({title,criteria,cvRequired});
-  localStorage.setItem("jobs",JSON.stringify(jobs));
-  alert("✅ Job added!"); document.getElementById("jobTitle").value=""; document.getElementById("jobCriteria").value=""; document.getElementById("cvRequired").checked=false;
-  loadJobs();
-}
-
-function loadJobs(){
-  let jobs=JSON.parse(localStorage.getItem("jobs"))||[];
-  let container=document.getElementById("jobsData"); container.innerHTML="";
-  jobs.forEach((job,index)=>{
-    container.innerHTML+=`
-      <div class="job-card">
-      <b>${job.title}</b><br>
-      ${job.criteria}<br>
-      CV Required: ${job.cvRequired?"Yes":"No"}<br>
-      <button onclick="deleteJob(${index})">❌ Delete Job</button>
-      </div>
-    `;
-  });
-}
-
-function deleteJob(index){
-  if(!confirm("Delete this job? This will remove it from applicants too.")) return;
-  let jobs=JSON.parse(localStorage.getItem("jobs"))||[];
-  jobs.splice(index,1);
-  localStorage.setItem("jobs",JSON.stringify(jobs));
-  // remove job from applicants
-  let applicants=JSON.parse(localStorage.getItem("apps"))||[];
-  applicants=applicants.filter(a=>a.jobTitle!==jobs[index]?.title);
-  localStorage.setItem("apps",JSON.stringify(applicants));
-  loadJobs(); loadApplicants();
-}
-
-function loadApplicants(){
-  let applicants=JSON.parse(localStorage.getItem("apps"))||[];
-  let container=document.getElementById("data"); container.innerHTML="";
-  applicants.forEach(a=>{
-    container.innerHTML+=`
-    <div class="applicant-card">
-      <b>${a.name}</b> applied for <b>${a.jobTitle}</b><br>
-      ${a.email}<br>${a.phone}<br>
-      CV Required: ${a.cvRequired?"Yes":"No"}<br>
-      Q1: ${a.q1}<br>
-      Q2: ${a.q2}<br>
-      ${a.attachment?`<a href="${a.attachment}" target="_blank">📎 View Attachment</a>`:"No attachment"}<br>
-      <button onclick="decide('${a.name}','${a.email}','accepted')">✅ Accept</button>
-      <button onclick="decide('${a.name}','${a.email}','rejected')">❌ Reject</button>
-    </div>`;
-  });
-}
-
-function decide(name,email,status){
-  let message=status==="accepted" ? "🎉 Congratulations! You have been selected." : "😔 Sorry, you were not selected.";
-  emailjs.send("service_b11zlym","template_j9v1gyq",{name,message,to_email:email})
-  .then(()=>alert("✅ Email sent")).catch(()=>alert("❌ Failed"));
-}
+    loadData();
 </script>
 </body>
 </html>
