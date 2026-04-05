@@ -1,137 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bionex Admin Dashboard</title>
-<style>
-:root { --primary:#1a237e; --success:#2e7d32; --danger:#d32f2f; --bg:#f0f4f8; }
-body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); }
-header { background:var(--primary); color:white; padding:30px; text-align:center; }
-.container { display:flex; flex-wrap:wrap; padding:20px; }
-.card { background:white; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); margin:10px; flex:1; min-width:300px; }
-input, textarea, button { width:100%; padding:10px; margin:5px 0; border-radius:6px; border:1px solid #ddd; box-sizing:border-box; }
-button { cursor:pointer; font-weight:bold; }
-.btn-post { background:#ffca28; color:#1a237e; }
-.btn-accept { background:var(--success); color:white; }
-.btn-reject { background:var(--danger); color:white; }
-table { width:100%; border-collapse: collapse; }
-th, td { border-bottom:1px solid #eee; padding:10px; text-align:left; }
-.job-card { background:#e8eaf6; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bionex Admin Dashboard</title>
+    <style>
+        :root { --primary:#1a237e; --success:#2e7d32; --danger:#d32f2f; --bg:#f0f4f8; }
+        body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); }
+        header { background:var(--primary); color:white; padding:30px; text-align:center; }
+        .container { display:flex; flex-wrap:wrap; padding:20px; }
+        .card { background:white; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); margin:10px; flex:1; min-width:300px; }
+        input, textarea, button { width:100%; padding:10px; margin:5px 0; border-radius:6px; border:1px solid #ddd; box-sizing:border-box; }
+        button { cursor:pointer; font-weight:bold; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
+        .btn-post { background:#ffca28; color:#1a237e; border:none; }
+        .btn-accept { background:var(--success); color:white; border:none; width:auto; padding:5px 10px; }
+        .btn-reject { background:var(--danger); color:white; border:none; width:auto; padding:5px 10px; }
+        .btn-delete { background:#ff5252; color:white; border:none; width:auto; padding:5px 10px; font-size: 12px; }
+        table { width:100%; border-collapse: collapse; margin-top:15px; }
+        th, td { border-bottom:1px solid #eee; padding:12px; text-align:left; }
+        .job-card { background:#e8eaf6; padding:12px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid var(--primary); }
+    </style>
 </head>
 <body>
+
 <header>
-<h1>Bionex Admin Dashboard</h1>
+    <h1>Bionex Admin Dashboard</h1>
+    <p>Manage Job Postings and Applications</p>
 </header>
 
 <div class="container">
-<div class="card">
-<h2>Post Job</h2>
-<input type="text" id="jobTitle" placeholder="Job Title">
-<textarea id="jobQuestions" placeholder="Interview Questions, comma separated"></textarea>
-<label><input type="checkbox" id="requireCV"> Require CV</label>
-<button class="btn-post" onclick="postJob()">Post Job</button>
+    <div class="card">
+        <h2>Post New Job</h2>
+        <input type="text" id="jobTitle" placeholder="Job Title (e.g. Biomedical Engineer)">
+        <textarea id="jobQuestions" placeholder="Interview Questions (comma separated)"></textarea>
+        <label style="display:block; margin:10px 0;"><input type="checkbox" id="requireCV"> Require CV Upload</label>
+        <button class="btn-post" onclick="postJob()">POST JOB NOW</button>
 
-<h3>Live Jobs</h3>
-<div id="jobsContainerAdmin"></div>
-</div>
+        <hr>
+        <h3>Live Jobs</h3>
+        <div id="jobsContainerAdmin">Loading jobs...</div>
+    </div>
 
-<div class="card">
-<h2>Applications</h2>
-<table>
-<thead><tr><th>Name</th><th>Job</th><th>CV</th><th>Decision</th></tr></thead>
-<tbody id="applicationsTable"></tbody>
-</table>
-</div>
+    <div class="card">
+        <h2>Received Applications</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Job Title</th>
+                        <th>CV</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsTable">
+                    </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+    // Firebase Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
-  authDomain: "bionex-job-portal-d9916.firebaseapp.com",
-  projectId: "bionex-job-portal-d9916",
-  storageBucket: "bionex-job-portal-d9916.appspot.com",
-  messagingSenderId: "98574190987",
-  appId: "1:98574190987:web:ceed55ea553cb05604478e",
-  measurementId: "G-9WZ1Y72F38"
-};
+    // Firebase Config yako
+    const firebaseConfig = {
+        apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
+        authDomain: "bionex-job-portal-d9916.firebaseapp.com",
+        projectId: "bionex-job-portal-d9916",
+        storageBucket: "bionex-job-portal-d9916.appspot.com",
+        messagingSenderId: "98574190987",
+        appId: "1:98574190987:web:ceed55ea553cb05604478e",
+        measurementId: "G-9WZ1Y72F38"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-const jobsContainerAdmin = document.getElementById("jobsContainerAdmin");
-const applicationsTable = document.getElementById("applicationsTable");
+    // --- FUNCTIONS ZA ADMIN ---
 
-// Post Job
-async function postJob(){
-    const title = document.getElementById("jobTitle").value.trim();
-    const questions = document.getElementById("jobQuestions").value.trim();
-    const requireCV = document.getElementById("requireCV").checked;
-    if(!title) return alert("Enter Job Title");
+    // 1. Kazi ya Kupost (Post Job)
+    window.postJob = async function() {
+        const title = document.getElementById("jobTitle").value.trim();
+        const questions = document.getElementById("jobQuestions").value.trim();
+        const requireCV = document.getElementById("requireCV").checked;
 
-    try{
-        await addDoc(collection(db,"jobs"),{title, questions, requireCV, postedAt:new Date()});
-        alert("Job Posted Successfully!");
-        document.getElementById("jobTitle").value="";
-        document.getElementById("jobQuestions").value="";
-        document.getElementById("requireCV").checked=false;
-        loadJobsAdmin();
-    }catch(e){
-        console.error("Post job error:", e);
-        alert("Failed to post job. Check console.");
+        if(!title) return alert("Tafadhali weka cheo cha kazi (Job Title)");
+
+        try {
+            await addDoc(collection(db, "jobs"), {
+                title: title,
+                questions: questions,
+                requireCV: requireCV,
+                postedAt: serverTimestamp()
+            });
+            alert("Kazi imepostiwa kikamilifu!");
+            
+            // Safisha fomu
+            document.getElementById("jobTitle").value = "";
+            document.getElementById("jobQuestions").value = "";
+            document.getElementById("requireCV").checked = false;
+            
+            loadJobsAdmin(); // Refresh orodha ya kazi
+        } catch(e) {
+            console.error("Error: ", e);
+            alert("Imefeli kupost. Angalia kama umeweka Rules kule Firebase.");
+        }
     }
-}
 
-// Load Jobs
-async function loadJobsAdmin(){
-    jobsContainerAdmin.innerHTML="";
-    const snapshot = await getDocs(collection(db,"jobs"));
-    if(snapshot.empty) jobsContainerAdmin.innerHTML="<p>No jobs posted.</p>";
-    snapshot.forEach(docSnap=>{
-        const job = docSnap.data();
-        const div = document.createElement("div");
-        div.className="job-card";
-        div.innerHTML = `<span>${job.title}</span> <button onclick="deleteJob('${docSnap.id}')">Delete</button>`;
-        jobsContainerAdmin.appendChild(div);
-    });
-}
-window.deleteJob = async function(jobId){
-    if(!confirm("Delete this job?")) return;
-    await deleteDoc(doc(db,"jobs",jobId));
+    // 2. Kazi ya Kupakia Orodha ya Kazi (Load Jobs)
+    window.loadJobsAdmin = async function() {
+        const container = document.getElementById("jobsContainerAdmin");
+        container.innerHTML = "Inatafuta kazi...";
+
+        try {
+            const snapshot = await getDocs(collection(db, "jobs"));
+            container.innerHTML = "";
+            
+            if(snapshot.empty) {
+                container.innerHTML = "<p>Hakuna kazi iliyopostiwa bado.</p>";
+                return;
+            }
+
+            snapshot.forEach(docSnap => {
+                const job = docSnap.data();
+                const div = document.createElement("div");
+                div.className = "job-card";
+                div.innerHTML = `
+                    <span><strong>${job.title}</strong></span> 
+                    <button class="btn-delete" onclick="deleteJob('${docSnap.id}')">Delete</button>
+                `;
+                container.appendChild(div);
+            });
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    // 3. Kufuta Kazi (Delete Job)
+    window.deleteJob = async function(jobId) {
+        if(!confirm("Je, una uhakika unataka kufuta kazi hii?")) return;
+        try {
+            await deleteDoc(doc(db, "jobs", jobId));
+            loadJobsAdmin();
+        } catch(e) {
+            alert("Imeshindikana kufuta.");
+        }
+    }
+
+    // 4. Kupakia Maombi ya Kazi (Load Applications)
+    window.loadApplications = async function() {
+        const tableBody = document.getElementById("applicationsTable");
+        tableBody.innerHTML = "<tr><td colspan='4'>Inatafuta maombi...</td></tr>";
+
+        try {
+            const snapshot = await getDocs(collection(db, "applications"));
+            tableBody.innerHTML = "";
+
+            if(snapshot.empty) {
+                tableBody.innerHTML = "<tr><td colspan='4'>Hakuna maombi yaliyopokelewa.</td></tr>";
+                return;
+            }
+
+            snapshot.forEach(docSnap => {
+                const appData = docSnap.data();
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${appData.name || 'N/A'}</td>
+                        <td>${appData.jobTitle || 'N/A'}</td>
+                        <td>${appData.cvUrl ? `<a href="${appData.cvUrl}" target="_blank" style="color:blue;">View CV</a>` : "No CV"}</td>
+                        <td>
+                            <button onclick="processDecision('${docSnap.id}', 'Accepted')" class="btn-accept">Accept</button>
+                            <button onclick="processDecision('${docSnap.id}', 'Rejected')" class="btn-reject">Reject</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    // 5. Kuchakata Maombi (Accept/Reject)
+    window.processDecision = async function(appId, decision) {
+        alert("Maombi yamekuwa: " + decision);
+        // Hapa unaweza kuongeza kodi ya kutuma email au kufuta application
+        await deleteDoc(doc(db, "applications", appId));
+        loadApplications();
+    }
+
+    // Pakia data mara tu page inapofunguka
     loadJobsAdmin();
-}
-
-// Load Applications
-async function loadApplications(){
-    applicationsTable.innerHTML="";
-    const snapshot = await getDocs(collection(db,"applications"));
-    snapshot.forEach(docSnap=>{
-        const app = docSnap.data();
-        applicationsTable.innerHTML+=`
-        <tr>
-        <td>${app.name}</td>
-        <td>${app.jobTitle}</td>
-        <td>${app.cvUrl?`<a href="${app.cvUrl}" target="_blank">View CV</a>`:"No CV"}</td>
-        <td>
-        <button onclick="processDecision('${docSnap.id}','Accepted')" class="btn-accept">Accept</button>
-        <button onclick="processDecision('${docSnap.id}','Rejected')" class="btn-reject">Reject</button>
-        </td>
-        </tr>`;
-    });
-}
-window.processDecision = async function(appId, decision){
-    await deleteDoc(doc(db,"applications",appId));
     loadApplications();
-}
-
-// Initial Load
-loadJobsAdmin();
-loadApplications();
 </script>
+
 </body>
 </html>
