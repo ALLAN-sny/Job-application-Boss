@@ -3,86 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bionex Admin - Control Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Bionex Admin - Debug Mode</title>
     <style>
-        :root { --primary:#1a237e; --secondary: #3949ab; --success:#2e7d32; --danger:#d32f2f; --bg:#f4f7f9; }
-        body { margin:0; font-family:'Poppins', sans-serif; background:var(--bg); color: #333; }
-        
-        header { background:var(--primary); color:white; padding:40px 20px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        header h1 { margin:0; font-size: 2.5rem; letter-spacing: 1px; }
-        header p { margin: 5px 0 0; opacity: 0.8; }
-
-        .container { display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; padding: 30px; max-width: 1200px; margin: auto; }
-        
-        .card { background:white; padding:25px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
-        .card h2 { margin-top:0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-
-        input, textarea { width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; font-family: inherit; }
-        textarea { height: 100px; resize: vertical; }
-
-        button { width:100%; padding:14px; margin:10px 0; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size: 1rem; transition: all 0.3s ease; }
-        .btn-post { background: #ffca28; color: #1a237e; box-shadow: 0 4px 15px rgba(255, 202, 40, 0.3); }
-        .btn-post:hover { background: #ffd54f; transform: translateY(-2px); }
-
-        .job-item { background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid var(--primary); }
-        .btn-delete { background:var(--danger); color:white; width:auto; padding:6px 12px; font-size: 0.8rem; }
-
-        table { width:100%; border-collapse: collapse; margin-top:10px; }
-        th { background: #f8f9fa; padding: 12px; text-align: left; color: #666; font-size: 0.9rem; }
-        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .btn-action { width: auto; padding: 5px 10px; margin: 2px; font-size: 0.8rem; }
-        .btn-accept { background: var(--success); color: white; }
-        .btn-reject { background: var(--danger); color: white; }
+        :root { --primary:#1a237e; --bg:#f4f7f9; }
+        body { margin:0; font-family:sans-serif; background:var(--bg); padding:20px; }
+        .card { background:white; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        input, textarea, button { width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; }
+        button { background: #ffca28; color: #1a237e; font-weight: bold; cursor: pointer; border: none; }
+        #status { color: red; font-weight: bold; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Bionex Admin Dashboard</h1>
-    <p>Biomedical Engineering Job Portal Management</p>
-</header>
-
-<div class="container">
-    <div class="card">
-        <h2>Post a New Opening</h2>
-        <input type="text" id="jobTitle" placeholder="Job Title (e.g., Clinical Engineer)">
-        <textarea id="jobQuestions" placeholder="Interview Questions (comma separated)"></textarea>
-        <label style="font-size: 0.9rem; color: #666;">
-            <input type="checkbox" id="requireCV"> Require CV Attachment
-        </label>
-        <button class="btn-post" onclick="postJob()">PUBLISH JOB</button>
-
-        <h3 style="margin-top:30px;">Active Listings</h3>
-        <div id="jobsContainerAdmin">Loading jobs...</div>
-    </div>
-
-    <div class="card">
-        <h2>Recent Applications</h2>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Applicant</th>
-                        <th>Position</th>
-                        <th>CV</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="applicationsTable">
-                    </tbody>
-            </table>
-        </div>
-    </div>
+<div class="card">
+    <h2 style="text-align:center; color:var(--primary);">Bionex Admin Test</h2>
+    <p style="font-size: 0.8rem; text-align: center;">Jaribu kupost kazi hapa chini:</p>
+    
+    <input type="text" id="jobTitle" placeholder="Andika Job Title hapa...">
+    <textarea id="jobQuestions" placeholder="Andika maswali (sio lazima)"></textarea>
+    <button onclick="postJob()">JARIBU KUPOST SASA</button>
+    
+    <div id="status"></div>
+    <hr>
+    <h3>Orodha ya Kazi:</h3>
+    <div id="jobsList">Inapakia...</div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-    // Firebase Configuration
+    // Firebase Config yako (Ihakiki vizuri na ya kule Console)
     const firebaseConfig = {
         apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
         authDomain: "bionex-job-portal-d9916.firebaseapp.com",
@@ -93,111 +44,60 @@
         measurementId: "G-9WZ1Y72F38"
     };
 
-    // Init Firebase
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- ADMIN FUNCTIONS ---
-
-    // 1. Post a Job
+    // --- FUNCTION YA KUPOST ---
     window.postJob = async function() {
         const title = document.getElementById("jobTitle").value.trim();
-        const questions = document.getElementById("jobQuestions").value.trim();
-        const requireCV = document.getElementById("requireCV").checked;
+        const statusDiv = document.getElementById("status");
 
-        if(!title) {
-            alert("Please enter a Job Title!");
-            return;
-        }
+        if(!title) return alert("Tafadhali jaza Job Title!");
+
+        statusDiv.innerHTML = "Inatuma... subiri kidogo.";
 
         try {
+            // Jaribio la kuongeza data
             await addDoc(collection(db, "jobs"), {
                 title: title,
-                questions: questions,
-                requireCV: requireCV,
-                postedAt: serverTimestamp()
+                questions: document.getElementById("jobQuestions").value,
+                postedAt: new Date().toISOString()
             });
-            alert("Success! Job is now live.");
+
+            alert("HONGERA! Imekubali kikamilifu.");
+            statusDiv.innerHTML = "Imefanikiwa!";
             document.getElementById("jobTitle").value = "";
-            document.getElementById("jobQuestions").value = "";
-            loadJobsAdmin();
-        } catch (e) {
-            console.error("Error posting job:", e);
-            alert("Error: Check your Firebase Rules or Console.");
-        }
-    }
+            loadJobs();
 
-    // 2. Load Jobs
-    window.loadJobsAdmin = async function() {
-        const container = document.getElementById("jobsContainerAdmin");
-        container.innerHTML = "<p>Updating list...</p>";
-        
-        try {
-            const snapshot = await getDocs(collection(db, "jobs"));
-            container.innerHTML = "";
-            if(snapshot.empty) container.innerHTML = "<p style='color:#999;'>No active jobs.</p>";
+        } catch (error) {
+            // HAPA NDIPO TUNAPOKAMATA ERROR
+            console.error(error);
+            statusDiv.innerHTML = "Imefeli!";
             
-            snapshot.forEach(docSnap => {
-                const job = docSnap.data();
-                const div = document.createElement("div");
-                div.className = "job-item";
-                div.innerHTML = `
-                    <span><strong>${job.title}</strong></span>
-                    <button class="btn-delete" onclick="deleteJob('${docSnap.id}')">Delete</button>
-                `;
-                container.appendChild(div);
-            });
-        } catch (e) { console.error(e); }
-    }
-
-    // 3. Delete Job
-    window.deleteJob = async function(id) {
-        if(confirm("Are you sure you want to remove this job?")) {
-            await deleteDoc(doc(db, "jobs", id));
-            loadJobsAdmin();
+            // Hii itatoa ujumbe kamili kwenye simu yako
+            alert("KOSA LIMEONEKANA:\n\n" + 
+                  "Code: " + error.code + "\n" + 
+                  "Message: " + error.message);
         }
     }
 
-    // 4. Load Applications
-    window.loadApplications = async function() {
-        const table = document.getElementById("applicationsTable");
-        table.innerHTML = "<tr><td colspan='4'>Loading applications...</td></tr>";
-
+    // --- FUNCTION YA KUSOMA KAZI ---
+    async function loadJobs() {
+        const listDiv = document.getElementById("jobsList");
         try {
-            const snapshot = await getDocs(collection(db, "applications"));
-            table.innerHTML = "";
-            if(snapshot.empty) {
-                table.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#999;'>No applicants yet.</td></tr>";
-                return;
-            }
-
-            snapshot.forEach(docSnap => {
-                const appData = docSnap.data();
-                const row = `
-                    <tr>
-                        <td><strong>${appData.name || 'Anonymous'}</strong></td>
-                        <td>${appData.jobTitle || 'General'}</td>
-                        <td>${appData.cvUrl ? `<a href="${appData.cvUrl}" target="_blank" style="color:var(--secondary); text-decoration:none;">View CV</a>` : 'N/A'}</td>
-                        <td>
-                            <button onclick="handleApp('${docSnap.id}', 'Accepted')" class="btn-action btn-accept">Accept</button>
-                            <button onclick="handleApp('${docSnap.id}', 'Rejected')" class="btn-action btn-reject">Reject</button>
-                        </td>
-                    </tr>`;
-                table.innerHTML += row;
+            const querySnapshot = await getDocs(collection(db, "jobs"));
+            listDiv.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                listDiv.innerHTML += `<p>✅ ${doc.data().title}</p>`;
             });
-        } catch (e) { console.error(e); }
+            if(querySnapshot.empty) listDiv.innerHTML = "Hakuna kazi bado.";
+        } catch (e) {
+            listDiv.innerHTML = "Hakuwezi kusoma data.";
+        }
     }
 
-    // 5. Handle Application
-    window.handleApp = async function(id, status) {
-        alert("Application " + status);
-        await deleteDoc(doc(db, "applications", id)); // Clean up after decision
-        loadApplications();
-    }
-
-    // Startup
-    loadJobsAdmin();
-    loadApplications();
+    loadJobs();
 </script>
 
 </body>
