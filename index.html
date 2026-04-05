@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bionex Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bionex Admin Dashboard</title>
 <style>
 :root { --primary:#1a237e; --success:#2e7d32; --danger:#d32f2f; --bg:#f0f4f8; }
 body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); }
@@ -17,8 +17,7 @@ button { cursor:pointer; font-weight:bold; }
 .btn-reject { background:var(--danger); color:white; }
 table { width:100%; border-collapse: collapse; }
 th, td { border-bottom:1px solid #eee; padding:10px; text-align:left; }
-.job-card { background:#e8eaf6; padding:12px; border-radius:8px; margin-bottom:8px; }
-.job-card:hover { background:#c5cae9; }
+.job-card { background:#e8eaf6; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
 </style>
 </head>
 <body>
@@ -52,6 +51,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebas
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
   authDomain: "bionex-job-portal-d9916.firebaseapp.com",
@@ -69,6 +69,7 @@ const storage = getStorage(app);
 const jobsContainerAdmin = document.getElementById("jobsContainerAdmin");
 const applicationsTable = document.getElementById("applicationsTable");
 
+// Post Job
 async function postJob(){
     const title = document.getElementById("jobTitle").value.trim();
     const questions = document.getElementById("jobQuestions").value.trim();
@@ -77,25 +78,32 @@ async function postJob(){
 
     await addDoc(collection(db,"jobs"),{title, questions, requireCV, postedAt:new Date()});
     alert("Job Posted!");
+    document.getElementById("jobTitle").value="";
+    document.getElementById("jobQuestions").value="";
+    document.getElementById("requireCV").checked=false;
     loadJobsAdmin();
-    loadApplications();
 }
 
+// Load Jobs
 async function loadJobsAdmin(){
     jobsContainerAdmin.innerHTML="";
     const snapshot = await getDocs(collection(db,"jobs"));
     snapshot.forEach(docSnap=>{
-        const job=docSnap.data();
-        jobsContainerAdmin.innerHTML += `<div class="job-card">${job.title} <button onclick="deleteJob('${docSnap.id}')">Delete</button></div>`;
+        const job = docSnap.data();
+        const div = document.createElement("div");
+        div.className="job-card";
+        div.innerHTML = `<span>${job.title}</span> <button onclick="deleteJob('${docSnap.id}')">Delete</button>`;
+        jobsContainerAdmin.appendChild(div);
     });
 }
 window.deleteJob = async function(jobId){
-    if(!confirm("Delete job?")) return;
+    if(!confirm("Delete this job?")) return;
     await deleteDoc(doc(db,"jobs",jobId));
+    alert("Job deleted!");
     loadJobsAdmin();
 }
 
-// Applications
+// Load Applications
 async function loadApplications(){
     applicationsTable.innerHTML="";
     const snapshot = await getDocs(collection(db,"applications"));
@@ -118,6 +126,7 @@ window.processDecision = async function(appId, decision){
     loadApplications();
 }
 
+// Initial Load
 loadJobsAdmin();
 loadApplications();
 </script>
