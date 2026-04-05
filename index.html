@@ -1,103 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bionex Admin - Debug Mode</title>
-    <style>
-        :root { --primary:#1a237e; --bg:#f4f7f9; }
-        body { margin:0; font-family:sans-serif; background:var(--bg); padding:20px; }
-        .card { background:white; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        input, textarea, button { width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; }
-        button { background: #ffca28; color: #1a237e; font-weight: bold; cursor: pointer; border: none; }
-        #status { color: red; font-weight: bold; text-align: center; margin-top: 10px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bionex Admin Dashboard</title>
+
+<style>
+:root { --primary:#1a237e; --bg:#f4f7f9; }
+body { margin:0; font-family:sans-serif; background:var(--bg); padding:20px; }
+
+.card {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+  max-width:500px;
+  margin:auto;
+}
+
+input, textarea, button {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button {
+  background:#ffca28;
+  color:#1a237e;
+  font-weight:bold;
+  cursor:pointer;
+  border:none;
+}
+
+#status {
+  text-align:center;
+  font-weight:bold;
+}
+.job {
+  background:#eef2ff;
+  padding:10px;
+  border-radius:8px;
+  margin:5px 0;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <h2 style="text-align:center; color:var(--primary);">Bionex Admin Test</h2>
-    <p style="font-size: 0.8rem; text-align: center;">Jaribu kupost kazi hapa chini:</p>
-    
-    <input type="text" id="jobTitle" placeholder="Andika Job Title hapa...">
-    <textarea id="jobQuestions" placeholder="Andika maswali (sio lazima)"></textarea>
-    <button onclick="postJob()">JARIBU KUPOST SASA</button>
-    
-    <div id="status"></div>
-    <hr>
-    <h3>Orodha ya Kazi:</h3>
-    <div id="jobsList">Inapakia...</div>
+  <h2 style="text-align:center;color:#1a237e;">Bionex Admin</h2>
+
+  <input type="text" id="jobTitle" placeholder="Job Title">
+  <textarea id="jobQuestions" placeholder="Maswali (optional)"></textarea>
+
+  <button id="postBtn">POST JOB</button>
+
+  <div id="status"></div>
+
+  <hr>
+  <h3>Posted Jobs:</h3>
+  <div id="jobsList">Loading...</div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-    // Firebase Config yako (Ihakiki vizuri na ya kule Console)
-    const firebaseConfig = {
-        apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
-        authDomain: "bionex-job-portal-d9916.firebaseapp.com",
-        projectId: "bionex-job-portal-d9916",
-        storageBucket: "bionex-job-portal-d9916.appspot.com",
-        messagingSenderId: "98574190987",
-        appId: "1:98574190987:web:ceed55ea553cb05604478e",
-        measurementId: "G-9WZ1Y72F38"
-    };
+// CONFIG YAKO
+const firebaseConfig = {
+  apiKey: "AIzaSyA5TJQ-nA9TuLsJJ9PXkYv9c0m7Q9_Dw64",
+  authDomain: "bionex-job-portal-d9916.firebaseapp.com",
+  projectId: "bionex-job-portal-d9916",
+  storageBucket: "bionex-job-portal-d9916.appspot.com",
+  messagingSenderId: "98574190987",
+  appId: "1:98574190987:web:ceed55ea553cb05604478e"
+};
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+// INIT
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    // --- FUNCTION YA KUPOST ---
-    window.postJob = async function() {
-        const title = document.getElementById("jobTitle").value.trim();
-        const statusDiv = document.getElementById("status");
+// POST JOB
+document.getElementById("postBtn").addEventListener("click", async () => {
+  const title = document.getElementById("jobTitle").value.trim();
+  const questions = document.getElementById("jobQuestions").value.trim();
+  const status = document.getElementById("status");
 
-        if(!title) return alert("Tafadhali jaza Job Title!");
+  if (!title) {
+    alert("Weka job title!");
+    return;
+  }
 
-        statusDiv.innerHTML = "Inatuma... subiri kidogo.";
+  status.innerHTML = "Inapost...";
 
-        try {
-            // Jaribio la kuongeza data
-            await addDoc(collection(db, "jobs"), {
-                title: title,
-                questions: document.getElementById("jobQuestions").value,
-                postedAt: new Date().toISOString()
-            });
+  try {
+    await addDoc(collection(db, "jobs"), {
+      title: title,
+      questions: questions,
+      createdAt: new Date()
+    });
 
-            alert("HONGERA! Imekubali kikamilifu.");
-            statusDiv.innerHTML = "Imefanikiwa!";
-            document.getElementById("jobTitle").value = "";
-            loadJobs();
-
-        } catch (error) {
-            // HAPA NDIPO TUNAPOKAMATA ERROR
-            console.error(error);
-            statusDiv.innerHTML = "Imefeli!";
-            
-            // Hii itatoa ujumbe kamili kwenye simu yako
-            alert("KOSA LIMEONEKANA:\n\n" + 
-                  "Code: " + error.code + "\n" + 
-                  "Message: " + error.message);
-        }
-    }
-
-    // --- FUNCTION YA KUSOMA KAZI ---
-    async function loadJobs() {
-        const listDiv = document.getElementById("jobsList");
-        try {
-            const querySnapshot = await getDocs(collection(db, "jobs"));
-            listDiv.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                listDiv.innerHTML += `<p>✅ ${doc.data().title}</p>`;
-            });
-            if(querySnapshot.empty) listDiv.innerHTML = "Hakuna kazi bado.";
-        } catch (e) {
-            listDiv.innerHTML = "Hakuwezi kusoma data.";
-        }
-    }
+    status.innerHTML = "✅ Job imepost!";
+    document.getElementById("jobTitle").value = "";
+    document.getElementById("jobQuestions").value = "";
 
     loadJobs();
+
+  } catch (error) {
+    console.error(error);
+    status.innerHTML = "❌ Error: " + error.message;
+  }
+});
+
+// LOAD JOBS
+async function loadJobs() {
+  const list = document.getElementById("jobsList");
+
+  try {
+    const snapshot = await getDocs(collection(db, "jobs"));
+    list.innerHTML = "";
+
+    if (snapshot.empty) {
+      list.innerHTML = "Hakuna jobs bado.";
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      list.innerHTML += `
+        <div class="job">
+          <strong>${data.title}</strong><br>
+          <small>${data.questions || ""}</small>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    list.innerHTML = "Imeshindwa kusoma data.";
+  }
+}
+
+// LOAD ON START
+loadJobs();
+
 </script>
 
 </body>
