@@ -1,114 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bionex Admin | Eng. Allan</title>
     <style>
-        :root { --navy: #0a192f; --gold: #ffca28; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; }
-        .sidebar { width: 250px; background: var(--navy); color: white; height: 100vh; position: fixed; padding: 25px; box-sizing: border-box; border-right: 5px solid var(--gold); }
-        .main { margin-left: 250px; padding: 40px; width: calc(100% - 250px); }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 10px; font-size: 1.1rem; }
-        .status-box { padding: 10px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
+        body { font-family: sans-serif; padding: 40px; background: #f0f2f5; }
+        .card { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 6px solid #ffca28; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #0a192f; color: #ffca28; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1rem; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2 style="color:var(--gold)">BIONEX</h2>
-    <p>CEO: <strong>Eng. Allan</strong></p>
-    <hr style="opacity:0.3">
-    <p>System: <span id="syncStatus">Syncing...</span></p>
-</div>
-
-<div class="main">
-    <div id="msg" class="status-box"></div>
-    <div class="card">
-        <h2 style="color:var(--navy); margin-top:0;">Deploy New Job Position</h2>
-        <form id="adminForm">
-            <label>JOB ID</label>
-            <input type="text" id="jobID" placeholder="e.g. BX001" required>
-            
-            <label>JOB TITLE</label>
-            <input type="text" id="jobTitle" placeholder="e.g. Biomedical Engineer" required>
-            
-            <label>QUESTIONS (Tenganisha kwa mkato , )</label>
-            <textarea id="jobQs" placeholder="Experience?, Education?"></textarea>
-            
-            <label>REQUIRE CV LINK?</label>
-            <select id="jobCV">
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-            </select>
-            
-            <button type="submit" id="pBtn" class="btn">PUBLISH TO PORTAL</button>
-        </form>
-    </div>
+<div class="card">
+    <h2 style="color:#0a192f; text-align:center;">Bionex Job Deployer</h2>
+    <form id="pForm">
+        <label>ID</label><input type="text" id="i" placeholder="BX001" required>
+        <label>Job Title</label><input type="text" id="t" placeholder="Biomedical Engineer" required>
+        <label>Questions (comma separated)</label><textarea id="q" placeholder="Experience?, Age?"></textarea>
+        <label>Require CV?</label>
+        <select id="c"><option value="No">No</option><option value="Yes">Yes</option></select>
+        <button type="submit" id="b">AUTHORIZE & PUBLISH</button>
+    </form>
 </div>
 
 <script>
-    const API_URL = "https://sheetdb.io/api/v1/2x8hezimvlj00";
+    const API = "https://sheetdb.io/api/v1/2x8hezimvlj00";
 
-    // 1. KULAZIMISHA MFUMO USOME SHEET MPYA (Force Reload on Load)
-    window.onload = async function() {
-        const statusText = document.getElementById("syncStatus");
-        try {
-            const res = await fetch(API_URL + "/reload");
-            if(res.ok) {
-                statusText.innerText = "Connected & Synced";
-                statusText.style.color = "#10b981";
-                console.log("SheetDB Synced Successfully");
-            }
-        } catch (e) {
-            statusText.innerText = "Sync Failed";
-            statusText.style.color = "#ef4444";
-        }
-    };
-
-    // 2. KUTUMA DATA KWENYE SHEET
-    document.getElementById("adminForm").addEventListener("submit", function(e) {
+    document.getElementById("pForm").addEventListener("submit", function(e) {
         e.preventDefault();
-        const btn = document.getElementById("pBtn");
-        const msgBox = document.getElementById("msg");
-        
+        const btn = document.getElementById("b");
         btn.innerText = "Transmitting...";
         btn.disabled = true;
 
-        const payload = {
-            "data": [{
-                "ID": document.getElementById("jobID").value,
-                "TITLE": document.getElementById("jobTitle").value,
-                "QUESTIONS": document.getElementById("jobQs").value,
-                "REQUIRECV": document.getElementById("jobCV").value
-            }]
+        // NJIA YA UHAKIKA: Kutuma kama Array ya Object moja
+        const myData = {
+            "ID": document.getElementById("i").value,
+            "TITLE": document.getElementById("t").value,
+            "QUESTIONS": document.getElementById("q").value,
+            "REQUIRECV": document.getElementById("c").value
         };
 
-        fetch(API_URL, {
+        fetch(API, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ "data": [myData] }) // Hii ndiyo format pekee SheetDB wanayotaka
         })
-        .then(response => response.json())
-        .then(data => {
-            if(data.created) {
-                alert("SUCCESS: Job is now live!");
+        .then(res => res.json())
+        .then(resData => {
+            if(resData.created || resData.affected_rows > 0) {
+                alert("SUCCESS! Job Posted to Bionex Portal.");
                 location.reload();
             } else {
-                alert("Error: " + JSON.stringify(data));
+                alert("Error: " + JSON.stringify(resData));
                 btn.disabled = false;
-                btn.innerText = "PUBLISH TO PORTAL";
+                btn.innerText = "AUTHORIZE & PUBLISH";
             }
         })
-        .catch(error => {
-            alert("Network Error. Hakikisha Sheet yako ipo 'Anyone with the link can EDIT'");
+        .catch(err => {
+            alert("Connection Failed. Check if Sheet is Public (Editor)");
             btn.disabled = false;
-            btn.innerText = "PUBLISH TO PORTAL";
+            btn.innerText = "AUTHORIZE & PUBLISH";
         });
     });
 </script>
