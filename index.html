@@ -3,122 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bionex Admin | Eng. Allan</title>
+    <title>Bionex Admin | Executive</title>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>emailjs.init("v-m77E7p5O_T16kX_");</script>
     <style>
-        :root { --navy: #0a192f; --gold: #ffca28; --bg: #f8fafc; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; }
-        .sidebar { width: 260px; background: var(--navy); color: white; padding: 30px; position: fixed; height: 100vh; border-right: 4px solid var(--gold); box-sizing: border-box; }
-        .main { margin-left: 260px; flex: 1; padding: 40px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        label { display: block; font-weight: bold; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; }
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn-post { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; background: #f1f5f9; font-size: 0.75rem; color: #475569; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        .btn-del { background: #fee2e2; color: #ef4444; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.7rem; }
+        :root { --navy: #0a192f; --gold: #ffca28; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; display: flex; }
+        .sidebar { width: 250px; background: var(--navy); color: white; height: 100vh; position: fixed; padding: 25px; box-sizing: border-box; border-right: 4px solid var(--gold); }
+        .content { margin-left: 250px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2 style="color:var(--gold); letter-spacing: 2px;">BIONEX</h2>
-    <p>Founder & CEO:<br><strong>Eng. Allan</strong></p>
-    <hr style="opacity:0.2; margin: 30px 0;">
-    <p>Status: <span style="color:#10b981;">● Online</span></p>
+    <h2 style="color:var(--gold)">BIONEX</h2>
+    <p>CEO: <strong>Eng. Allan</strong></p>
+    <hr style="opacity:0.2">
+    <p>System: <strong>Active</strong></p>
 </div>
 
-<div class="main">
-    <h1 style="color: var(--navy);">Executive Terminal</h1>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px;">
-        <div class="card">
-            <h3>Deploy New Job</h3>
-            <form id="jobForm">
-                <label>ID</label>
-                <input type="text" name="ID" required>
-                <label>TITLE</label>
-                <input type="text" name="TITLE" required>
-                <label>QUESTIONS (Comma separated)</label>
-                <textarea name="QUESTIONS" rows="3"></textarea>
-                <label>REQUIRECV</label>
-                <select name="REQUIRECV">
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                </select>
-                <button type="submit" id="pBtn" class="btn-post">PUBLISH POSITION</button>
-            </form>
-            <div id="liveJobsList" style="margin-top:20px;"></div>
-        </div>
-
-        <div class="card">
-            <h3>Applicant Pipeline</h3>
-            <table>
-                <thead>
-                    <tr><th>CANDIDATE</th><th>POSITION</th><th>ACTION</th></tr>
-                </thead>
-                <tbody id="applicantList">
-                    <tr><td colspan="3" style="text-align:center; padding:20px;">Fetching records...</td></tr>
-                </tbody>
-            </table>
-        </div>
+<div class="content">
+    <div class="card">
+        <h2>Deploy Position</h2>
+        <form id="adminForm">
+            <label>ID</label><input type="text" id="jobID" required>
+            <label>TITLE</label><input type="text" id="jobTitle" required>
+            <label>QUESTIONS (Comma separated)</label><textarea id="jobQs"></textarea>
+            <label>REQUIRECV</label>
+            <select id="jobCV"><option value="No">No</option><option value="Yes">Yes</option></select>
+            <button type="submit" id="pBtn" class="btn">PUBLISH TO PORTAL</button>
+        </form>
     </div>
 </div>
 
 <script>
     const API_URL = "https://sheetdb.io/api/v1/2x8hezimvlj00";
 
-    document.getElementById("jobForm").addEventListener("submit", async (e) => {
+    document.getElementById("adminForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        document.getElementById("pBtn").innerText = "Publishing...";
-        await fetch(API_URL, { method: "POST", body: new FormData(e.target) });
-        alert("Job Published!");
-        location.reload();
+        const btn = document.getElementById("pBtn");
+        btn.innerText = "Transmitting...";
+
+        // Kutengeneza JSON Package
+        const payload = {
+            data: [{
+                ID: document.getElementById("jobID").value,
+                TITLE: document.getElementById("jobTitle").value,
+                QUESTIONS: document.getElementById("jobQs").value,
+                REQUIRECV: document.getElementById("jobCV").value
+            }]
+        };
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(res.ok) {
+                alert("Position Live!");
+                location.reload();
+            }
+        } catch (err) { alert("Failed to connect!"); }
     });
-
-    async function loadData() {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        
-        // Jobs
-        const jobs = data.filter(r => r.TITLE);
-        document.getElementById("liveJobsList").innerHTML = jobs.map(j => `
-            <div style="display:flex; justify-content:space-between; padding:8px; background:#f8fafc; margin-bottom:5px; border-radius:5px; border:1px solid #eee;">
-                <span style="font-size:13px; font-weight:bold;">${j.TITLE}</span>
-                <button class="btn-del" onclick="deleteJob('${j.TITLE}')">DEL</button>
-            </div>
-        `).join('');
-
-        // Applicants - Using your exact new headers
-        const apps = data.filter(r => r.NAME);
-        document.getElementById("applicantList").innerHTML = apps.length ? apps.map(u => `
-            <tr>
-                <td><strong>${u.NAME}</strong><br><small>${u['EMAIL ADRESS']}</small></td>
-                <td><span style="color:#3b82f6; font-weight:bold;">${u.POSITION}</span></td>
-                <td>
-                    <button style="border:none; background:none; cursor:pointer;" onclick="respond('${u['EMAIL ADRESS']}','${u.NAME}','accept')">✔</button>
-                    <button style="border:none; background:none; cursor:pointer; color:red;" onclick="respond('${u['EMAIL ADRESS']}','${u.NAME}','reject')">✖</button>
-                </td>
-            </tr>
-        `).join('') : "<tr><td colspan='3' style='text-align:center;'>No applicants yet.</td></tr>";
-    }
-
-    async function deleteJob(title) {
-        if(confirm(`Delete ${title}?`)) {
-            await fetch(`${API_URL}/TITLE/${title}`, { method: "DELETE" });
-            location.reload();
-        }
-    }
-
-    window.respond = (email, name, type) => {
-        const tid = type === 'accept' ? "template_3w0v7dr" : "template_rej123";
-        emailjs.send("service_69b8y3p", tid, { to_email: email, to_name: name })
-        .then(() => alert("Decision Sent!"));
-    };
-
-    loadData();
 </script>
 </body>
 </html>
