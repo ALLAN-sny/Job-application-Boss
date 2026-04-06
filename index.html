@@ -2,72 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bionex Admin | Executive</title>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>emailjs.init("v-m77E7p5O_T16kX_");</script>
+    <title>Bionex Admin | Eng. Allan</title>
     <style>
         :root { --navy: #0a192f; --gold: #ffca28; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; display: flex; }
-        .sidebar { width: 250px; background: var(--navy); color: white; height: 100vh; position: fixed; padding: 25px; box-sizing: border-box; border-right: 4px solid var(--gold); }
-        .content { margin-left: 250px; padding: 40px; width: 100%; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 40px; }
+        .card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--gold); }
         input, textarea, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 10px; }
+        .btn { background: var(--navy); color: var(--gold); border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 10px; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2 style="color:var(--gold)">BIONEX</h2>
-    <p>CEO: <strong>Eng. Allan</strong></p>
-    <hr style="opacity:0.2">
-    <p>System: <strong>Active</strong></p>
-</div>
-
-<div class="content">
-    <div class="card">
-        <h2>Deploy Position</h2>
-        <form id="adminForm">
-            <label>ID</label><input type="text" id="jobID" required>
-            <label>TITLE</label><input type="text" id="jobTitle" required>
-            <label>QUESTIONS (Comma separated)</label><textarea id="jobQs"></textarea>
-            <label>REQUIRECV</label>
-            <select id="jobCV"><option value="No">No</option><option value="Yes">Yes</option></select>
-            <button type="submit" id="pBtn" class="btn">PUBLISH TO PORTAL</button>
-        </form>
-    </div>
+<div class="card">
+    <h2 style="color:var(--navy); text-align:center;">Bionex Job Deployer</h2>
+    <form id="postForm">
+        <label>ID</label><input type="text" id="inID" required>
+        <label>TITLE</label><input type="text" id="inTitle" required>
+        <label>QUESTIONS</label><textarea id="inQs" placeholder="Q1, Q2, Q3"></textarea>
+        <label>REQUIRE CV?</label>
+        <select id="inCV"><option value="No">No</option><option value="Yes">Yes</option></select>
+        <button type="submit" id="btn" class="btn">PUBLISH NOW</button>
+    </form>
 </div>
 
 <script>
-    const API_URL = "https://sheetdb.io/api/v1/2x8hezimvlj00";
+    const API = "https://sheetdb.io/api/v1/2x8hezimvlj00";
 
-    document.getElementById("adminForm").addEventListener("submit", async (e) => {
+    document.getElementById("postForm").addEventListener("submit", function(e) {
         e.preventDefault();
-        const btn = document.getElementById("pBtn");
-        btn.innerText = "Transmitting...";
+        const b = document.getElementById("btn");
+        b.innerText = "Transmitting...";
+        b.disabled = true;
 
-        // Kutengeneza JSON Package
-        const payload = {
-            data: [{
-                ID: document.getElementById("jobID").value,
-                TITLE: document.getElementById("jobTitle").value,
-                QUESTIONS: document.getElementById("jobQs").value,
-                REQUIRECV: document.getElementById("jobCV").value
-            }]
+        const item = {
+            "ID": document.getElementById("inID").value,
+            "TITLE": document.getElementById("inTitle").value,
+            "QUESTIONS": document.getElementById("inQs").value,
+            "REQUIRECV": document.getElementById("inCV").value
         };
 
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if(res.ok) {
-                alert("Position Live!");
-                location.reload();
-            }
-        } catch (err) { alert("Failed to connect!"); }
+        fetch(API, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({"data": [item]})
+        })
+        .then(res => res.json())
+        .then(d => {
+            if(d.created) { alert("Job Posted Successfully!"); location.reload(); }
+            else { alert("Error: " + JSON.stringify(d)); b.disabled = false; b.innerText = "PUBLISH NOW"; }
+        })
+        .catch(e => { alert("Check Connection"); b.disabled = false; });
     });
 </script>
 </body>
