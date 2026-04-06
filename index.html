@@ -1,62 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bionex Admin | Eng. Allan</title>
     <style>
-        body { font-family: sans-serif; padding: 30px; background: #f0f2f5; }
-        .box { max-width: 400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 6px solid #ffca28; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #0a192f; color: #ffca28; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 8px solid #ffca28; }
+        h2 { color: #0a192f; text-align: center; }
+        input, textarea, select { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { background: #0a192f; color: #ffca28; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
+<div class="card">
+    <h2>BIONEX ADMIN</h2>
+    <p style="text-align:center;">Post Job Position</p>
+    
+    <form action="https://sheetdb.io/api/v1/2x8hezimvlj00" method="POST">
+        <label>Job ID</label>
+        <input type="text" name="data[ID]" placeholder="BX001" required>
 
-<div class="box">
-    <h2 style="color:#0a192f; text-align:center;">Bionex Job Deployer</h2>
-    <form id="pForm">
-        <label>ID</label><input type="text" name="ID" placeholder="BX001" required>
-        <label>Job Title</label><input type="text" name="TITLE" placeholder="Biomedical Engineer" required>
-        <label>Questions</label><textarea name="QUESTIONS" placeholder="Experience?, Age?"></textarea>
+        <label>Job Title</label>
+        <input type="text" name="data[TITLE]" placeholder="Biomedical Engineer" required>
+
+        <label>Questions (comma separated)</label>
+        <textarea name="data[QUESTIONS]" placeholder="Experience?, Education?"></textarea>
+
         <label>Require CV?</label>
-        <select name="REQUIRECV"><option value="No">No</option><option value="Yes">Yes</option></select>
-        <button type="submit" id="b">PUBLISH JOB NOW</button>
+        <select name="data[REQUIRECV]">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>
+
+        <input type="hidden" name="data[NAME]" value="">
+        <input type="hidden" name="data[EMAIL ADRESS]" value="">
+        <input type="hidden" name="data[PHONE NO:]" value="">
+        <input type="hidden" name="data[POSITION]" value="">
+
+        <button type="submit">PUBLISH JOB NOW</button>
     </form>
 </div>
-
-<script>
-    const API = "https://sheetdb.io/api/v1/2x8hezimvlj00";
-
-    document.getElementById("pForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-        const btn = document.getElementById("b");
-        btn.innerText = "Transmitting...";
-        btn.disabled = true;
-
-        // NJIA YA UHAKIKA: Tunatumia URLSearchParams badala ya JSON
-        const formData = new URLSearchParams(new FormData(this));
-
-        fetch(API, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            // SheetDB inarudisha "created" ikifanikiwa
-            if(data.created || data.affected_rows > 0) {
-                alert("SUCCESS! Job is now Live.");
-                location.reload();
-            } else {
-                alert("Error: " + JSON.stringify(data));
-                btn.disabled = false;
-                btn.innerText = "PUBLISH JOB NOW";
-            }
-        })
-        .catch(err => {
-            alert("Check if your Sheet is Public (Editor)");
-            btn.disabled = false;
-            btn.innerText = "PUBLISH JOB NOW";
-        });
-    });
-</script>
 </body>
 </html>
