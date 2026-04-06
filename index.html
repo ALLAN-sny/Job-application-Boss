@@ -2,56 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bionex Admin | Eng. Allan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bionex Admin | Executive Terminal</title>
     <style>
-        :root { --navy: #0a192f; --gold: #ffca28; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 40px; }
-        .card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--gold); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: var(--navy); color: var(--gold); border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 10px; font-size: 1.1rem; }
+        :root { --navy: #0a192f; --gold: #ffca28; --slate: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--slate); margin: 0; display: flex; }
+        .sidebar { width: 280px; background: var(--navy); color: white; height: 100vh; position: fixed; padding: 30px; box-sizing: border-box; border-right: 5px solid var(--gold); }
+        .main-content { margin-left: 280px; padding: 50px; width: 100%; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 600px; }
+        h2 { color: var(--navy); margin-top: 0; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+        label { display: block; margin-top: 20px; font-weight: bold; color: #64748b; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 15px; margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 1rem; background: #fcfcfc; }
+        input:focus { border-color: var(--gold); outline: none; }
+        .btn-publish { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 18px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 30px; font-size: 1.1rem; transition: 0.3s; }
+        .btn-publish:hover { background: var(--gold); color: var(--navy); }
+        .status-tag { display: inline-block; padding: 5px 12px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="color:var(--navy); text-align:center;">Bionex Job Deployer</h2>
-    <form id="postForm">
-        <label>ID</label><input type="text" id="inID" required>
-        <label>TITLE</label><input type="text" id="inTitle" required>
-        <label>QUESTIONS</label><textarea id="inQs" placeholder="Q1, Q2, Q3"></textarea>
-        <label>REQUIRE CV?</label>
-        <select id="inCV"><option value="No">No</option><option value="Yes">Yes</option></select>
-        <button type="submit" id="btn" class="btn">PUBLISH NOW</button>
-    </form>
+<div class="sidebar">
+    <h1 style="color: var(--gold); letter-spacing: 2px;">BIONEX</h1>
+    <p style="opacity: 0.7;">Executive Management</p>
+    <div style="margin-top: 50px;">
+        <p>System Admin:</p>
+        <h3 style="margin: 0;">Eng. Allan</h3>
+        <p style="margin-top: 20px;"><span class="status-tag">● SERVER ONLINE</span></p>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="card">
+        <h2>Deploy New Vacancy</h2>
+        <p style="color: #94a3b8;">Jaza maelezo hapa chini ili kazi ionekane kwenye portal ya waombaji.</p>
+        
+        <form id="postJobForm">
+            <label>JOB ID (Example: BX-01)</label>
+            <input type="text" id="jobID" placeholder="BX-001" required>
+            
+            <label>JOB TITLE (Position Name)</label>
+            <input type="text" id="jobTitle" placeholder="Biomedical Engineer" required>
+            
+            <label>ASSESSMENT QUESTIONS (Tenganisha kwa mkato , )</label>
+            <textarea id="jobQs" rows="3" placeholder="Experience?, Education?, Why Bionex?"></textarea>
+            
+            <label>REQUIRE CV UPLOAD?</label>
+            <select id="jobCV">
+                <option value="No">No (Text Responses Only)</option>
+                <option value="Yes">Yes (Require Google Drive Link)</option>
+            </select>
+            
+            <button type="submit" id="submitBtn" class="btn-publish">AUTHORIZE & PUBLISH</button>
+        </form>
+    </div>
 </div>
 
 <script>
-    const API = "https://sheetdb.io/api/v1/2x8hezimvlj00";
+    const SHEETDB_URL = "https://sheetdb.io/api/v1/2x8hezimvlj00";
 
-    document.getElementById("postForm").addEventListener("submit", function(e) {
+    document.getElementById("postJobForm").addEventListener("submit", function(e) {
         e.preventDefault();
-        const b = document.getElementById("btn");
-        b.innerText = "Transmitting...";
-        b.disabled = true;
+        const btn = document.getElementById("submitBtn");
+        
+        btn.innerText = "TRANSMITTING DATA...";
+        btn.disabled = true;
 
-        const item = {
-            "ID": document.getElementById("inID").value,
-            "TITLE": document.getElementById("inTitle").value,
-            "QUESTIONS": document.getElementById("inQs").value,
-            "REQUIRECV": document.getElementById("inCV").value
+        const dataPayload = {
+            "data": [{
+                "ID": document.getElementById("jobID").value,
+                "TITLE": document.getElementById("jobTitle").value,
+                "QUESTIONS": document.getElementById("jobQs").value,
+                "REQUIRECV": document.getElementById("jobCV").value
+            }]
         };
 
-        fetch(API, {
+        fetch(SHEETDB_URL, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({"data": [item]})
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataPayload)
         })
-        .then(res => res.json())
-        .then(d => {
-            if(d.created) { alert("Job Posted Successfully!"); location.reload(); }
-            else { alert("Error: " + JSON.stringify(d)); b.disabled = false; b.innerText = "PUBLISH NOW"; }
+        .then(response => response.json())
+        .then(result => {
+            if(result.created) {
+                alert("SUCCESS: Job has been deployed to the Careers Portal!");
+                location.reload();
+            } else {
+                alert("Error: " + JSON.stringify(result));
+                btn.disabled = false;
+                btn.innerText = "AUTHORIZE & PUBLISH";
+            }
         })
-        .catch(e => { alert("Check Connection"); b.disabled = false; });
+        .catch(error => {
+            alert("Network Error: Check your connection or API link.");
+            btn.disabled = false;
+            btn.innerText = "AUTHORIZE & PUBLISH";
+        });
     });
 </script>
 </body>
