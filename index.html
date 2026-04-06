@@ -3,23 +3,23 @@
 <head>
     <title>Bionex Admin | Eng. Allan</title>
     <style>
-        body { font-family: sans-serif; padding: 40px; background: #f0f2f5; }
-        .card { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 6px solid #ffca28; }
+        body { font-family: sans-serif; padding: 30px; background: #f0f2f5; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 6px solid #ffca28; }
         input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #0a192f; color: #ffca28; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1rem; }
+        button { width: 100%; padding: 15px; background: #0a192f; color: #ffca28; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="box">
     <h2 style="color:#0a192f; text-align:center;">Bionex Job Deployer</h2>
     <form id="pForm">
-        <label>ID</label><input type="text" id="i" placeholder="BX001" required>
-        <label>Job Title</label><input type="text" id="t" placeholder="Biomedical Engineer" required>
-        <label>Questions (comma separated)</label><textarea id="q" placeholder="Experience?, Age?"></textarea>
+        <label>ID</label><input type="text" name="ID" placeholder="BX001" required>
+        <label>Job Title</label><input type="text" name="TITLE" placeholder="Biomedical Engineer" required>
+        <label>Questions</label><textarea name="QUESTIONS" placeholder="Experience?, Age?"></textarea>
         <label>Require CV?</label>
-        <select id="c"><option value="No">No</option><option value="Yes">Yes</option></select>
-        <button type="submit" id="b">AUTHORIZE & PUBLISH</button>
+        <select name="REQUIRECV"><option value="No">No</option><option value="Yes">Yes</option></select>
+        <button type="submit" id="b">PUBLISH JOB NOW</button>
     </form>
 </div>
 
@@ -32,37 +32,29 @@
         btn.innerText = "Transmitting...";
         btn.disabled = true;
 
-        // NJIA YA UHAKIKA: Kutuma kama Array ya Object moja
-        const myData = {
-            "ID": document.getElementById("i").value,
-            "TITLE": document.getElementById("t").value,
-            "QUESTIONS": document.getElementById("q").value,
-            "REQUIRECV": document.getElementById("c").value
-        };
+        // NJIA YA UHAKIKA: Tunatumia URLSearchParams badala ya JSON
+        const formData = new URLSearchParams(new FormData(this));
 
         fetch(API, {
             method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ "data": [myData] }) // Hii ndiyo format pekee SheetDB wanayotaka
+            body: formData
         })
         .then(res => res.json())
-        .then(resData => {
-            if(resData.created || resData.affected_rows > 0) {
-                alert("SUCCESS! Job Posted to Bionex Portal.");
+        .then(data => {
+            // SheetDB inarudisha "created" ikifanikiwa
+            if(data.created || data.affected_rows > 0) {
+                alert("SUCCESS! Job is now Live.");
                 location.reload();
             } else {
-                alert("Error: " + JSON.stringify(resData));
+                alert("Error: " + JSON.stringify(data));
                 btn.disabled = false;
-                btn.innerText = "AUTHORIZE & PUBLISH";
+                btn.innerText = "PUBLISH JOB NOW";
             }
         })
         .catch(err => {
-            alert("Connection Failed. Check if Sheet is Public (Editor)");
+            alert("Check if your Sheet is Public (Editor)");
             btn.disabled = false;
-            btn.innerText = "AUTHORIZE & PUBLISH";
+            btn.innerText = "PUBLISH JOB NOW";
         });
     });
 </script>
